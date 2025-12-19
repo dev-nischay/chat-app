@@ -1,56 +1,23 @@
-import { WebSocketServer } from "ws";
-import WebSocket from "ws";
-const wss = new WebSocketServer({ port: 8080 });
+import express from "express";
+const app = express();
+import cors from "cors";
+import "./ws.js";
+import { roomRouter } from "./controller.js";
+import type { Request, Response, NextFunction } from "express";
+import { Httpstatus } from "./types.js";
+import { AppError } from "./utils.js";
+import { error } from "./error.js";
+app.use(cors());
+app.use(express.json());
 
-interface User {
-  room: string;
-  socket: WebSocket;
-}
+app.use("/room", roomRouter);
 
-type UserResponse = {
-  // from the client
-  type: "join" | "chat";
-  payload: {
-    roomId?: string;
-    message?: string;
-  };
-};
-
-const allSockets: User[] = [];
-
-wss.on("connection", (socket) => {
-  socket.on("message", (message: string) => {
-    const { type, payload }: UserResponse = JSON.parse(message);
-
-    if (type === "join" && payload.roomId && payload.roomId!?.length > 0) {
-      allSockets.push({
-        room: payload.roomId,
-        socket: socket, // think of  socket is a user
-      });
-      console.log("Room created");
-      socket.send(`Room created with id ${payload.roomId} `);
-    }
-
-    if (type === "chat") {
-      const currentUserRoom = allSockets.find((e) => e.socket === socket);
-
-      if (currentUserRoom && payload.message && payload.message?.length > 0) {
-        const room = allSockets.filter(
-          (e) => e.room === currentUserRoom.room && e.socket !== socket
-        );
-
-        room.forEach((e) => e.socket.send(payload.message!));
-      } else {
-        socket.send("Invalid User kindly join a room first to chat");
-      }
-    }
-  });
-
-  socket.on("close", () => {
-    console.log("socket disconnected");
-    socket.send("Chat Terminated");
-  });
+app.all(/.*/, (req: Request, res: Response, next: NextFunction) => {
+  return next(new AppError("Invalid Route", Httpstatus.NotFound));
 });
-// server crashing on invalid data
-// irregular logs
-// if users joins again old connection must be terminated
+
+app.use(error);
+
+app.listen(3000, () => {
+  console.log(`Server running at Port: 3000`);
+});
