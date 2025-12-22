@@ -7,6 +7,9 @@ import type { Request, Response, NextFunction } from "express";
 import { Httpstatus } from "./types.js";
 import { AppError } from "./utils.js";
 import { error } from "./error.js";
+import http from "http";
+import { WebSocketServer } from "ws";
+
 app.use(cors());
 app.use(express.json());
 

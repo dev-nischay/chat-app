@@ -33,6 +33,7 @@ wss.on("connection", (socket: ExtendedWebSocket) => {
           })
         );
       }
+
       room.users.add(socket);
 
       socket.roomId = payload.roomId;
@@ -87,16 +88,15 @@ wss.on("connection", (socket: ExtendedWebSocket) => {
 
     const currenSockets = MemoryState.get(socket.roomId);
     currenSockets?.users.delete(socket);
-    console.log(currenSockets?.users.size);
+    console.log(currenSockets?.users.size); // check that the user is getting removed or not
   });
 });
 
 wss.on("error", (err) => {
   console.log("error" + err);
 });
-// server crashing on invalid data
-// implement record / map to avoid using loops
+
 // if users joins again old connection must be terminated
-// figure out how to save user chats
 // see best practises for websockets for professionalism
-// create a error class to send errors
+// add zod and if invalid client response send a socket error back to the client
+// deply on intranet
