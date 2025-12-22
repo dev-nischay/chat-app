@@ -1,17 +1,54 @@
 import { Users } from "lucide-react";
 import { useState } from "react";
 import type { RoomProps } from "./CreateRoom";
+import { useNavigate } from "react-router-dom";
+import { useRoomStore } from "../context/roomStore";
+
+export type UserResponse = {
+  type: "chat" | "join";
+  payload: {
+    message?: string;
+    roomId?: string;
+  };
+};
 
 export const JoinRoom = ({ setMode }: RoomProps) => {
   const [roomCode, setRoomCode] = useState("");
+  const setRoomId = useRoomStore((state) => state.setRoomId);
+  const nav = useNavigate();
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
     if (roomCode.trim().length >= 5) {
-      // Redirect to chat with room code
       console.log("Joining room:", roomCode);
       alert(`Joining room: ${roomCode}`);
+
+      try {
+        const data = JSON.stringify({
+          type: "join",
+          payload: {
+            roomId: roomCode,
+          },
+        });
+        const response = await fetch("http://localhost:3000/room/join/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: data,
+        });
+
+        console.log(await response.json());
+
+        if (response.ok) {
+          setRoomId(roomCode);
+          nav("/chat");
+        }
+      } catch (error) {
+        alert(error);
+      }
     }
   };
+
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
       <div className="w-full max-w-md relative z-10">

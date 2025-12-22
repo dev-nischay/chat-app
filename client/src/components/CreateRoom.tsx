@@ -1,6 +1,7 @@
 import { MessageCircle, Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
-
+import { useNavigate } from "react-router-dom";
+import { useRoomStore } from "../context/roomStore";
 export type RoomProps = {
   setMode: React.Dispatch<React.SetStateAction<string | null>>;
 };
@@ -8,7 +9,8 @@ export type RoomProps = {
 export const CreateRoom = ({ setMode }: RoomProps) => {
   const [copied, setCopied] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
-
+  const setRoomId = useRoomStore((state) => state.setRoomId);
+  const nav = useNavigate();
   const generateRoomCode = () => {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let code = "";
@@ -24,9 +26,33 @@ export const CreateRoom = ({ setMode }: RoomProps) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleEnterRoom = () => {
+  const handleEnterRoom = async () => {
     console.log("Entering room:", generatedCode);
-    alert(`Entering room: ${generatedCode}`);
+
+    try {
+      const data = JSON.stringify({
+        type: "create",
+        payload: {
+          roomId: generatedCode,
+        },
+      });
+      const response = await fetch("http://localhost:3000/room/create/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: data,
+      });
+
+      console.log(await response.json());
+
+      if (response.ok) {
+        setRoomId(generatedCode);
+        nav("/chat");
+      }
+    } catch (error) {
+      alert(error);
+    }
   };
 
   useEffect(() => {
