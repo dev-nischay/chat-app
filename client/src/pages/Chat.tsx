@@ -1,41 +1,90 @@
 import { MessageCircle } from "lucide-react";
+import { useRoomStore } from "../context/roomStore";
+
+export type ServerResponse = {
+  type: "error" | "response";
+  payload: {
+    message: string;
+  };
+};
+
+type ChatMessages = {
+  sender: "me" | "server";
+  message: string;
+};
 import { useEffect, useState, useRef } from "react";
-
+import type { UserResponse } from "../components/JoinRoom";
 export const ChatPage = () => {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [message, setMessage] = useState("");
-  const [socket, setSocket] = useState<WebSocket>();
-  const [incmomingMessage, setIncomingMessage] = useState<string[]>([]);
-  const [chats, setChats] = useState([{}]);
+  let inputRef = useRef<HTMLInputElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const roomId = useRoomStore((state) => state?.roomId);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [chats, setChats] = useState<ChatMessages[]>([]);
+
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8080");
-    setSocket(ws);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chats]);
 
-    ws.onmessage = (message) => {
-      const data = message.data.toString();
-      setIncomingMessage((prev) => [...prev, data]);
+  useEffect(() => {
+    try {
+      const ws = new WebSocket("ws://localhost:8080");
+      setSocket(ws);
 
-      setChats((prev) => [
-        ...prev,
-        {
-          type: message.data.type,
-          message: data,
+      const join: UserResponse = {
+        type: "join",
+        payload: {
+          roomId: roomId,
         },
-      ]);
-    };
+      };
+
+      setTimeout(() => {
+        ws.send(JSON.stringify(join));
+      }, 2000);
+
+      ws.onmessage = (response) => {
+        if (typeof response.data === "string") {
+          const data: ServerResponse = JSON.parse(response.data);
+          console.log(response);
+
+          setChats((prev) => [
+            ...prev,
+            { sender: "server", message: data.payload.message },
+          ]);
+
+          if (data.type === "error") {
+            throw new Error(data.payload.message);
+          }
+        }
+      };
+      return () => {
+        ws.close(1000, "User logged out");
+        setSocket(null);
+      };
+    } catch (error: unknown) {
+      error instanceof Error ? alert(error.message) : console.log(error);
+    }
   }, []);
 
   const sendMessage = () => {
-    const inputMessage = inputRef.current?.value;
+    let inputMessage = inputRef.current?.value as string;
 
-    const body = {
-      type: "chat",
-      payload: {
-        message: inputMessage,
-      },
-    };
+    if (inputMessage?.length > 0) {
+      const body = {
+        type: "chat",
+        payload: {
+          message: inputMessage,
+        },
+      };
 
-    socket?.send(JSON.stringify(body));
+      setChats((prev) => [...prev, { sender: "me", message: inputMessage }]);
+
+      socket?.send(JSON.stringify(body));
+      if (inputRef.current?.value != null) {
+        inputRef.current.value = "";
+      }
+    } else {
+      alert("Message cannot be empty");
+    }
   };
 
   return (
@@ -63,16 +112,22 @@ export const ChatPage = () => {
           </div>
 
           {/* Chat box */}
-          <div className="border-white/10 h-[30rem] rounded-xl  border-2 p-3">
-            <div className="   flex flex-col gap-4">
-              {incmomingMessage.map((e, index) => (
+          {/* enable visible scroll on message */}
+          <div className="border-white/10 overflow-y-scroll  h-[30rem] rounded-xl  border-2 p-3">
+            <div className="flex flex-col  gap-4">
+              {chats.map((e, index) => (
                 <div
                   key={index}
-                  className="bg-white/50 h-fit p-2 w-fit rounded-md text-sm   "
+                  className={`min-h-0 p-2 w-fit rounded-md text-sm   ${
+                    e.sender === "server"
+                      ? "bg-white/50 self-start"
+                      : "bg-white self-end"
+                  }`}
                 >
-                  {e}
+                  {e.message}
                 </div>
               ))}
+              <div ref={bottomRef}></div>
             </div>
           </div>
 
