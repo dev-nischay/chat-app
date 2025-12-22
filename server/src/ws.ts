@@ -33,7 +33,6 @@ wss.on("connection", (socket: ExtendedWebSocket) => {
           })
         );
       }
-
       room.users.add(socket);
 
       socket.roomId = payload.roomId;
@@ -88,15 +87,10 @@ wss.on("connection", (socket: ExtendedWebSocket) => {
 
     const currenSockets = MemoryState.get(socket.roomId);
     currenSockets?.users.delete(socket);
-    console.log(currenSockets?.users.size); // check that the user is getting removed or not
+    console.log(currenSockets?.users.size);
   });
 });
 
 wss.on("error", (err) => {
   console.log("error" + err);
 });
-
-// if users joins again old connection must be terminated
-// see best practises for websockets for professionalism
-// add zod and if invalid client response send a socket error back to the client
-// deply on intranet

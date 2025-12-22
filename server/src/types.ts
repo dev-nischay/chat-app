@@ -21,6 +21,8 @@ export enum Httpstatus {
   NotFound = 404,
   Unauthorized = 403,
 }
+
+// attaching roomId to websocket interface
 export interface ExtendedWebSocket extends WebSocket {
   roomId: string;
 }

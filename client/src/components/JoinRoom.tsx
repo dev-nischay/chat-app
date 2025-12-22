@@ -1,16 +1,8 @@
 import { Users } from "lucide-react";
 import { useState } from "react";
-import type { RoomProps } from "./CreateRoom";
+import type { RoomProps } from "./components.types";
 import { useNavigate } from "react-router-dom";
 import { useRoomStore } from "../context/roomStore";
-
-export type UserResponse = {
-  type: "chat" | "join";
-  payload: {
-    message?: string;
-    roomId?: string;
-  };
-};
 
 export const JoinRoom = ({ setMode }: RoomProps) => {
   const [roomCode, setRoomCode] = useState("");

@@ -16,6 +16,7 @@ import { MemoryState } from "./memoryDb.js";
 import { Httpstatus } from "./types.js";
 export const roomRouter = Router();
 
+// create a room via http
 roomRouter.post(
   "/create",
   async (req: Request, res: Response, next: NextFunction) => {
@@ -64,6 +65,7 @@ roomRouter.post(
   }
 );
 
+// join a room via http
 roomRouter.post("/join", (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsed = joinRoomSchema.safeParse(req.body);

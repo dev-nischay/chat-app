@@ -2,15 +2,14 @@ import { MessageCircle, Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRoomStore } from "../context/roomStore";
-export type RoomProps = {
-  setMode: React.Dispatch<React.SetStateAction<string | null>>;
-};
-
+import type { RoomProps } from "./components.types";
 export const CreateRoom = ({ setMode }: RoomProps) => {
   const [copied, setCopied] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
   const setRoomId = useRoomStore((state) => state.setRoomId);
   const nav = useNavigate();
+
+  // 6 digit random code logic
   const generateRoomCode = () => {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let code = "";
@@ -30,6 +29,7 @@ export const CreateRoom = ({ setMode }: RoomProps) => {
     console.log("Entering room:", generatedCode);
 
     try {
+      // Room create req to WS server
       const data = JSON.stringify({
         type: "create",
         payload: {
@@ -66,7 +66,6 @@ export const CreateRoom = ({ setMode }: RoomProps) => {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-      {/* add start logic to main layout */}
       <div className="w-full max-w-md relative z-10">
         <div className="bg-zinc-900 rounded-lg p-8 border border-zinc-800">
           <div className="flex items-center gap-3 mb-6">

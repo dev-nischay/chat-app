@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 
 export const MainLayout = () => {
   const generateStars = (count: number) => {
+    // bg-animation logic
     return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: Math.random() * 100,

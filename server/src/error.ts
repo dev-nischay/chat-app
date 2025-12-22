@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler } from "express";
 import { AppError } from "./utils.js";
 
+// error middleware
 export const error: ErrorRequestHandler = (err: unknown, req, res, next) => {
   if (err instanceof AppError) {
     const statusCode = err.statusCode || 500;

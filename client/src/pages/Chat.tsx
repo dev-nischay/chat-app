@@ -1,19 +1,9 @@
 import { MessageCircle } from "lucide-react";
 import { useRoomStore } from "../context/roomStore";
-
-export type ServerResponse = {
-  type: "error" | "response";
-  payload: {
-    message: string;
-  };
-};
-
-type ChatMessages = {
-  sender: "me" | "server";
-  message: string;
-};
+import type { ChatMessages, ServerResponse } from "./pages.types";
 import { useEffect, useState, useRef } from "react";
-import type { UserResponse } from "../components/JoinRoom";
+import type { UserResponse } from "../components/components.types";
+
 export const ChatPage = () => {
   let inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -30,6 +20,7 @@ export const ChatPage = () => {
       const ws = new WebSocket("ws://localhost:8080");
       setSocket(ws);
 
+      // join the websocket room
       const join: UserResponse = {
         type: "join",
         payload: {
@@ -41,18 +32,22 @@ export const ChatPage = () => {
         ws.send(JSON.stringify(join));
       }, 2000);
 
+      // receive message
       ws.onmessage = (response) => {
         if (typeof response.data === "string") {
           const data: ServerResponse = JSON.parse(response.data);
           console.log(response);
 
-          setChats((prev) => [
-            ...prev,
-            { sender: "server", message: data.payload.message },
-          ]);
-
+          if (data.type === "response") {
+            setChats((prev) => [
+              ...prev,
+              { sender: "server", message: data.payload.message },
+            ]);
+          }
           if (data.type === "error") {
             throw new Error(data.payload.message);
+          } else {
+            console.log(data.payload); // broadcast
           }
         }
       };
@@ -68,6 +63,7 @@ export const ChatPage = () => {
   const sendMessage = () => {
     let inputMessage = inputRef.current?.value as string;
 
+    // send reponse to server
     if (inputMessage?.length > 0) {
       const body = {
         type: "chat",
